@@ -35,7 +35,7 @@ return [
     'ai_title' => 'AI-Drink aus Namen',
     'ai_hint' => 'Gib einen Drinknamen und optionale Notizen ein. Die AI erfindet ein Rezept, das du speichern kannst.',
     'ai_login' => 'Bitte einloggen, um den AI-Generator zu nutzen.',
-    'ai_missing_key' => 'OpenAI API-Schlussel fehlt. In config.php eintragen.',
+    'ai_missing_key' => 'OpenAI API-Schlussel fehlt. In config.local.php eintragen.',
     'ai_name_label' => 'Drinkname',
     'ai_name_placeholder' => 'Bsp: Moonlit Orchard',
     'ai_notes_label' => 'Notizen (optional)',
@@ -106,3 +106,4 @@ return [
     'admin_remove_admin' => 'Admin entfernen',
     'admin_none' => 'Keine wartenden Benutzer.',
 ];
+

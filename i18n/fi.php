@@ -35,7 +35,7 @@ return [
     'ai_title' => 'AI-juoma nimesta',
     'ai_hint' => 'Kirjoita juoman nimi ja halutessasi lisatiedot. AI keksii reseptin jonka voit tallentaa.',
     'ai_login' => 'Kirjaudu sisaan kayttaaksesi AI-generatoria.',
-    'ai_missing_key' => 'OpenAI API-avain puuttuu. Lisaa config.php tiedostoon.',
+    'ai_missing_key' => 'OpenAI API-avain puuttuu. Lisaa config.local.php tiedostoon.',
     'ai_name_label' => 'Juoman nimi',
     'ai_name_placeholder' => 'Esim: Moonlit Orchard',
     'ai_notes_label' => 'Muistiinpanot (valinnainen)',
@@ -106,3 +106,4 @@ return [
     'admin_remove_admin' => 'Poista admin',
     'admin_none' => 'Ei odottavia kayttajia.',
 ];
+

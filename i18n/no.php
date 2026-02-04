@@ -35,7 +35,7 @@ return [
     'ai_title' => 'AI-drink fra navn',
     'ai_hint' => 'Skriv et drinknavn og valgfri notater. AI lager en oppskrift du kan lagre.',
     'ai_login' => 'Logg inn for a bruke AI-generatoren.',
-    'ai_missing_key' => 'OpenAI API-nokkel mangler. Legg inn i config.php.',
+    'ai_missing_key' => 'OpenAI API-nokkel mangler. Legg inn i config.local.php.',
     'ai_name_label' => 'Drinknavn',
     'ai_name_placeholder' => 'Eks: Moonlit Orchard',
     'ai_notes_label' => 'Notater (valgfritt)',
@@ -106,3 +106,4 @@ return [
     'admin_remove_admin' => 'Fjern admin',
     'admin_none' => 'Ingen ventende brukere.',
 ];
+

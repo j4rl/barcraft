@@ -1,4 +1,4 @@
-﻿# barcraft
+# barcraft
 Craft drinks with AI and with stuff you have at home
 
 ## Setup
@@ -13,8 +13,9 @@ Craft drinks with AI and with stuff you have at home
 - Admin kan godkanna andra anvandare och satta admin-status i grannssnittet.
 
 ## AI-generator
-- Fyll i din OpenAI API-nyckel i `config.php` under `openai.api_key`.
-- Standardmodell ar `gpt-4o-mini` men kan andras i `config.php`.
+- Fyll i din OpenAI API-nyckel i `config.local.php` under `openai.api_key` (se `config.local.example.php`).
+- `config.local.php` ar git-ignorerad och ska inte committas.
+- Standardmodell ar `gpt-4o-mini` men kan andras i `config.php` eller overridas i `config.local.php`.
 - AI-generatorn kraver inloggning.
 - PHPs cURL-extension maste vara aktiverad.
 
