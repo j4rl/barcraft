@@ -14,6 +14,42 @@ function supported_languages(): array
     ];
 }
 
+function supported_languages_with_flags(): array
+{
+    $languages = supported_languages();
+    $flags = language_flag_map();
+    $fallback = $flags['en'] ?? 'assets/en.png';
+    $result = [];
+
+    foreach ($languages as $code => $label) {
+        $result[$code] = [
+            'label' => $label,
+            'flag' => $flags[$code] ?? $fallback,
+        ];
+    }
+
+    return $result;
+}
+
+function language_flag_map(): array
+{
+    return [
+        'en' => 'assets/en.png',
+        'sv' => 'assets/se.png',
+        'no' => 'assets/no.png',
+        'fi' => 'assets/fi.png',
+        'da' => 'assets/dk.png',
+        'de' => 'assets/de.png',
+        'pl' => 'assets/pl.png',
+    ];
+}
+
+function language_flag_path(string $lang): string
+{
+    $flags = language_flag_map();
+    return $flags[$lang] ?? ($flags['en'] ?? 'assets/en.png');
+}
+
 function i18n_messages(string $lang): array
 {
     $base = __DIR__ . '/../i18n/';
@@ -34,8 +70,11 @@ function i18n_lang(array $config, ?array $user): string
 {
     $default = $config['app']['default_lang'] ?? 'en';
     $lang = $default;
+
     if ($user && !empty($user['language'])) {
         $lang = (string) $user['language'];
+    } elseif (isset($_SESSION) && is_array($_SESSION) && !empty($_SESSION['lang'])) {
+        $lang = (string) $_SESSION['lang'];
     }
 
     $languages = supported_languages();

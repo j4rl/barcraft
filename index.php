@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $flash = ['type' => 'error', 'message' => implode(' ', $errors)];
         } else {
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
-            $default_lang = $config['app']['default_lang'] ?? 'en';
+            $default_lang = i18n_lang($config, null);
 
             try {
                 create_user($db, $register_form['name'], $register_form['email'], $password_hash, $default_lang);
@@ -189,17 +189,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'save_language') {
-        if (!is_logged_in($current_user)) {
-            $flash = ['type' => 'error', 'message' => t('flash_login_required')];
-        } else {
-            $language = (string) ($_POST['language'] ?? '');
-            $languages = supported_languages();
-            if (isset($languages[$language])) {
+        $language = (string) ($_POST['language'] ?? '');
+        $languages = supported_languages();
+        if (isset($languages[$language])) {
+            if (is_logged_in($current_user)) {
                 update_user_language($db, (int) $current_user['id'], $language);
                 $current_user['language'] = $language;
                 $GLOBALS['current_user'] = $current_user;
-                $flash = ['type' => 'success', 'message' => t('flash_language_saved')];
+            } else {
+                $_SESSION['lang'] = $language;
             }
+            $flash = ['type' => 'success', 'message' => t('flash_language_saved')];
         }
     }
 
@@ -390,6 +390,9 @@ $all_users = is_admin($current_user) ? fetch_all_users($db) : [];
 
 $app_name = $config['app']['name'] ?? 'Barcraft';
 $lang = i18n_lang($config, $current_user);
+$language_options = supported_languages_with_flags();
+$lang_label = $language_options[$lang]['label'] ?? 'English';
+$lang_flag = $language_options[$lang]['flag'] ?? 'assets/en.png';
 ?>
 <!doctype html>
 <html lang="<?= e($lang) ?>">
@@ -441,11 +444,34 @@ $lang = i18n_lang($config, $current_user);
         <?php if (is_admin($current_user)): ?>
             <a href="#admin" class="nav-link"><?= e(t('nav_admin')) ?></a>
         <?php endif; ?>
+        <?php if (!is_logged_in($current_user)): ?>
+            <form method="post" action="index.php" class="nav-lang" aria-label="<?= e(t('profile_language')) ?>">
+                <input type="hidden" name="action" value="save_language">
+                <?php foreach ($language_options as $code => $option): ?>
+                    <button
+                        type="submit"
+                        class="nav-lang-btn<?= $code === $lang ? ' is-selected' : '' ?>"
+                        name="language"
+                        value="<?= e($code) ?>"
+                        title="<?= e($option['label']) ?>"
+                        aria-label="<?= e($option['label']) ?>"
+                    >
+                        <img src="<?= e($option['flag']) ?>" alt="" class="lang-flag" width="18" height="12" loading="lazy">
+                    </button>
+                <?php endforeach; ?>
+            </form>
+        <?php endif; ?>
     </nav>
 
     <?php if (is_logged_in($current_user)): ?>
         <div class="auth-bar">
-            <span><?= e(t('auth_logged_in_as', ['name' => (string) $current_user['name']])) ?></span>
+            <div class="auth-meta">
+                <span><?= e(t('auth_logged_in_as', ['name' => (string) $current_user['name']])) ?></span>
+                <span class="lang-pill">
+                    <img src="<?= e($lang_flag) ?>" alt="" class="lang-flag" width="18" height="12" loading="lazy">
+                    <span><?= e($lang_label) ?></span>
+                </span>
+            </div>
             <form method="post" action="index.php" class="auth-inline">
                 <input type="hidden" name="action" value="logout">
                 <button type="submit" class="btn btn-light"><?= e(t('auth_logout')) ?></button>
@@ -672,12 +698,16 @@ $lang = i18n_lang($config, $current_user);
                     <form class="form" method="post" action="index.php#profile">
                         <input type="hidden" name="action" value="save_language">
                         <div class="field">
-                            <label for="language"><?= e(t('profile_language')) ?></label>
-                            <select id="language" name="language">
-                                <?php foreach (supported_languages() as $code => $label): ?>
-                                    <option value="<?= e($code) ?>" <?= $code === $lang ? 'selected' : '' ?>><?= e($label) ?></option>
+                            <label><?= e(t('profile_language')) ?></label>
+                            <div class="lang-options" role="radiogroup" aria-label="<?= e(t('profile_language')) ?>">
+                                <?php foreach ($language_options as $code => $option): ?>
+                                    <label class="lang-option<?= $code === $lang ? ' is-selected' : '' ?>">
+                                        <input type="radio" name="language" value="<?= e($code) ?>" <?= $code === $lang ? 'checked' : '' ?>>
+                                        <img src="<?= e($option['flag']) ?>" alt="" class="lang-flag" width="18" height="12" loading="lazy">
+                                        <span><?= e($option['label']) ?></span>
+                                    </label>
                                 <?php endforeach; ?>
-                            </select>
+                            </div>
                         </div>
                         <button type="submit" class="btn"><?= e(t('profile_language_btn')) ?></button>
                     </form>
