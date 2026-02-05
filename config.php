@@ -25,10 +25,13 @@ $base_config = [
         'base_url' => '',
         'default_lang' => 'en',
     ],
-    'openai' => [
+    'ai' => [
+        'enabled' => false,
+    ],
+    'gemini' => [
         'api_key' => '',
-        'model' => 'gpt-4o-mini',
-        'base_url' => 'https://api.openai.com/v1',
+        'model' => 'gemini-2.0-flash',
+        'base_url' => 'https://generativelanguage.googleapis.com/v1beta',
         'timeout' => 25,
     ],
 ];

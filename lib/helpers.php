@@ -80,11 +80,28 @@ function filter_search(array $drinks, string $query): array
 
     $results = [];
     foreach ($drinks as $drink) {
+        $ingredient_text = '';
+        if (!empty($drink['ingredients']) && is_array($drink['ingredients'])) {
+            $names = [];
+            foreach ($drink['ingredients'] as $ingredient) {
+                if (!is_array($ingredient)) {
+                    continue;
+                }
+                $name = trim((string) ($ingredient['name'] ?? ''));
+                if ($name !== '') {
+                    $names[] = $name;
+                }
+            }
+            if ($names !== []) {
+                $ingredient_text = ' ' . implode(' ', $names);
+            }
+        }
         $haystack = str_lower(
             ($drink['name'] ?? '') . ' ' .
             ($drink['description'] ?? '') . ' ' .
             ($drink['instructions'] ?? '') . ' ' .
-            ($drink['quote'] ?? '')
+            ($drink['quote'] ?? '') .
+            $ingredient_text
         );
         if (strpos($haystack, $needle) !== false) {
             $results[] = $drink;

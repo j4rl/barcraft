@@ -53,4 +53,14 @@ CREATE TABLE IF NOT EXISTS user_pantry (
   CONSTRAINT fk_pantry_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS password_resets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(190) NOT NULL,
+  note VARCHAR(255) NULL,
+  status VARCHAR(40) NOT NULL DEFAULT 'new',
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  resolved_at TIMESTAMP NULL DEFAULT NULL,
+  KEY idx_password_resets_status (status),
+  KEY idx_password_resets_email (email)
+) ENGINE=InnoDB;
 

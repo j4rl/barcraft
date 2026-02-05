@@ -7,14 +7,14 @@ function ai_generate_drink(array $config, string $name, string $notes, string $l
         return ['ok' => false, 'error' => 'curl_missing'];
     }
 
-    $api_key = trim((string) ($config['openai']['api_key'] ?? ''));
+    $api_key = trim((string) ($config['gemini']['api_key'] ?? ''));
     if ($api_key === '') {
         return ['ok' => false, 'error' => 'missing_api_key'];
     }
 
-    $base_url = rtrim((string) ($config['openai']['base_url'] ?? 'https://api.openai.com/v1'), '/');
-    $model = (string) ($config['openai']['model'] ?? 'gpt-4o-mini');
-    $timeout = (int) ($config['openai']['timeout'] ?? 25);
+    $base_url = rtrim((string) ($config['gemini']['base_url'] ?? 'https://generativelanguage.googleapis.com/v1beta'), '/');
+    $model = (string) ($config['gemini']['model'] ?? 'gemini-2.0-flash');
+    $timeout = (int) ($config['gemini']['timeout'] ?? 25);
 
     $languages = supported_languages();
     $language = $languages[$lang] ?? 'English';
@@ -39,10 +39,12 @@ function ai_generate_drink(array $config, string $name, string $notes, string $l
                         'amount' => ['type' => 'string'],
                     ],
                     'required' => ['name', 'amount'],
+                    'propertyOrdering' => ['name', 'amount'],
                 ],
             ],
         ],
         'required' => ['name', 'description', 'instructions', 'quote', 'ingredients'],
+        'propertyOrdering' => ['name', 'description', 'instructions', 'quote', 'ingredients'],
     ];
 
     $instructions = "You are a creative bartender. Respond in {$language}. " .
@@ -55,26 +57,33 @@ function ai_generate_drink(array $config, string $name, string $notes, string $l
     }
 
     $payload = [
-        'model' => $model,
-        'instructions' => $instructions,
-        'input' => $input,
-        'text' => [
-            'format' => [
-                'type' => 'json_schema',
-                'name' => 'drink',
-                'schema' => $schema,
-                'strict' => true,
+        'system_instruction' => [
+            'parts' => [
+                ['text' => $instructions],
             ],
+        ],
+        'contents' => [
+            [
+                'role' => 'user',
+                'parts' => [
+                    ['text' => $input],
+                ],
+            ],
+        ],
+        'generationConfig' => [
+            'responseMimeType' => 'application/json',
+            'responseJsonSchema' => $schema,
         ],
     ];
 
-    $ch = curl_init($base_url . '/responses');
+    $endpoint = $base_url . '/models/' . rawurlencode($model) . ':generateContent';
+    $ch = curl_init($endpoint);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . $api_key,
+            'x-goog-api-key: ' . $api_key,
         ],
         CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_SLASHES),
         CURLOPT_TIMEOUT => $timeout,
@@ -102,6 +111,12 @@ function ai_generate_drink(array $config, string $name, string $notes, string $l
         return ['ok' => false, 'error' => 'bad_response'];
     }
 
+    if (isset($decoded['promptFeedback']['blockReason'])) {
+        $reason = (string) ($decoded['promptFeedback']['blockReason'] ?? 'blocked');
+        $message = (string) ($decoded['promptFeedback']['blockReasonMessage'] ?? '');
+        return ['ok' => false, 'error' => $message !== '' ? $reason . ': ' . $message : $reason];
+    }
+
     $text_output = ai_extract_output_text($decoded);
     if ($text_output === '') {
         return ['ok' => false, 'error' => 'empty_output'];
@@ -122,6 +137,29 @@ function ai_generate_drink(array $config, string $name, string $notes, string $l
 
 function ai_extract_output_text(array $response): string
 {
+    if (isset($response['candidates']) && is_array($response['candidates'])) {
+        $text = '';
+        foreach ($response['candidates'] as $candidate) {
+            if (!is_array($candidate)) {
+                continue;
+            }
+            $content = $candidate['content'] ?? [];
+            if (!is_array($content)) {
+                continue;
+            }
+            $parts = $content['parts'] ?? [];
+            if (!is_array($parts)) {
+                continue;
+            }
+            foreach ($parts as $part) {
+                if (is_array($part) && isset($part['text'])) {
+                    $text .= (string) $part['text'];
+                }
+            }
+        }
+        return trim($text);
+    }
+
     $output = $response['output'] ?? [];
     if (!is_array($output)) {
         return '';

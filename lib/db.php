@@ -58,6 +58,26 @@ function fetch_drinks(mysqli $db): array
     return $drinks;
 }
 
+function fetch_all_ingredients(mysqli $db): array
+{
+    $result = $db->query(
+        "SELECT name
+         FROM ingredients
+         ORDER BY name ASC"
+    );
+
+    $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $names = [];
+    foreach ($rows as $row) {
+        $name = trim((string) ($row['name'] ?? ''));
+        if ($name !== '') {
+            $names[] = $name;
+        }
+    }
+
+    return $names;
+}
+
 function insert_drink(mysqli $db, array $drink, array $ingredients): int
 {
     $db->begin_transaction();
@@ -255,4 +275,15 @@ function replace_user_pantry(mysqli $db, int $user_id, array $ingredients): void
     }
 
     $db->commit();
+}
+
+function create_password_reset_request(mysqli $db, string $email, string $note): int
+{
+    $stmt = $db->prepare(
+        "INSERT INTO password_resets (email, note) VALUES (?, ?)"
+    );
+    $stmt->bind_param("ss", $email, $note);
+    $stmt->execute();
+
+    return (int) $stmt->insert_id;
 }
